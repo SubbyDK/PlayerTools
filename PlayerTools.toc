@@ -1,0 +1,11 @@
+## Interface: 11200
+## Title: |cffffa64dPlayerTools|r |cffe6c07dby Subby|r
+## Author: Subby
+## Version: 1.0
+## DefaultState: enabled
+## Notes: Add extra right click options to the unit popup menu.
+
+## SavedVariables: 
+## SavedVariablesPerCharacter: 
+
+PlayerTools.lua
