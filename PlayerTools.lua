@@ -33,22 +33,6 @@ UnitPopupButtons["PLAYERTOOLS_SEPARATOR"] = {
     notClickable = 1,
 }
 
-
-
---[[
-local status = true
-if IsInGuild() then
-    local test = GetGuildInfo("player")
-    if (test == nil) then
-        status = false
-    end
-end
-   
-   return status
---]]
-
-
-
 -- ============================================
 --  Add our entries to the unit popup menus
 -- ============================================
@@ -92,7 +76,9 @@ PlayerTools_EventFrame:SetScript("OnEvent", function()
         PlayerTools_EventFrame:UnregisterEvent("ADDON_LOADED")
     elseif (event == "PLAYER_ENTERING_WORLD") then
         if IsInGuild() then
-            GuildRoster();
+            if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) then
+                GuildRoster();
+            end
             waitForRoster = "YES"
             PlayerTools_LogInTime = GetTime()
         else
@@ -144,52 +130,52 @@ end
 -- ============================================
 
 local PlayerToolsCopyFrame = CreateFrame("Frame", "PlayerToolsCopyFrame", UIParent)
-PlayerToolsCopyFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    PlayerToolsCopyFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-PlayerToolsCopyFrame:SetWidth(380)
-PlayerToolsCopyFrame:SetHeight(90)
+    PlayerToolsCopyFrame:SetWidth(380)
+    PlayerToolsCopyFrame:SetHeight(90)
 
-PlayerToolsCopyFrame:SetBackdrop({
-    bgFile = "Interface\\Buttons\\White8x8",
-    tile = true, tileSize = 8,
-    insets = { left = 0, right = 0, top = 0, bottom = 0 }
-})
-PlayerToolsCopyFrame:SetBackdropColor(0, 0, 0, 0.7)
-PlayerToolsCopyFrame:Hide()
+    PlayerToolsCopyFrame:SetBackdrop({
+        bgFile = "Interface\\Buttons\\White8x8",
+        tile = true, tileSize = 8,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 }
+    })
+    PlayerToolsCopyFrame:SetBackdropColor(0, 0, 0, 0.7)
+    PlayerToolsCopyFrame:Hide()
 
-PlayerToolsCopyFrame:EnableMouse(true)
-PlayerToolsCopyFrame:SetMovable(true)
-PlayerToolsCopyFrame:RegisterForDrag("LeftButton")
-PlayerToolsCopyFrame:SetScript("OnDragStart", function() this:StartMoving() end)
-PlayerToolsCopyFrame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+    PlayerToolsCopyFrame:EnableMouse(true)
+    PlayerToolsCopyFrame:SetMovable(true)
+    PlayerToolsCopyFrame:RegisterForDrag("LeftButton")
+    PlayerToolsCopyFrame:SetScript("OnDragStart", function() this:StartMoving() end)
+    PlayerToolsCopyFrame:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
 
 local PlayerToolsCopyLabel = PlayerToolsCopyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-PlayerToolsCopyLabel:SetPoint("TOPLEFT", PlayerToolsCopyFrame, "TOPLEFT", 10, -10)
-PlayerToolsCopyLabel:SetText("Press Ctrl+C to copy")
-PlayerToolsCopyLabel:SetTextColor(1, 0.82, 0)
+    PlayerToolsCopyLabel:SetPoint("TOPLEFT", PlayerToolsCopyFrame, "TOPLEFT", 10, -10)
+    PlayerToolsCopyLabel:SetText("Press Ctrl+C to copy")
+    PlayerToolsCopyLabel:SetTextColor(1, 0.82, 0)
 
 local PlayerToolsLinkBox = CreateFrame("EditBox", nil, PlayerToolsCopyFrame)
-PlayerToolsLinkBox:SetPoint("TOPLEFT", PlayerToolsCopyLabel, "BOTTOMLEFT", 0, -5)
-PlayerToolsLinkBox:SetWidth(350)
-PlayerToolsLinkBox:SetHeight(25)
-PlayerToolsLinkBox:SetFontObject(GameFontHighlight)
+    PlayerToolsLinkBox:SetPoint("TOPLEFT", PlayerToolsCopyLabel, "BOTTOMLEFT", 0, -5)
+    PlayerToolsLinkBox:SetWidth(350)
+    PlayerToolsLinkBox:SetHeight(25)
+    PlayerToolsLinkBox:SetFontObject(GameFontHighlight)
 
-PlayerToolsLinkBox:SetBackdrop({
-    bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    edgeSize = 8,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-})
-PlayerToolsLinkBox:SetBackdropColor(0.1, 0.1, 0.1, 1)
-PlayerToolsLinkBox:SetTextInsets(5, 5, 0, 0)
-PlayerToolsLinkBox:SetScript("OnEscapePressed", function() PlayerToolsCopyFrame:Hide() end)
+    PlayerToolsLinkBox:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        edgeSize = 8,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    })
+    PlayerToolsLinkBox:SetBackdropColor(0.1, 0.1, 0.1, 1)
+    PlayerToolsLinkBox:SetTextInsets(5, 5, 0, 0)
+    PlayerToolsLinkBox:SetScript("OnEscapePressed", function() PlayerToolsCopyFrame:Hide() end)
 
 local PlayerToolsCloseBtn = CreateFrame("Button", nil, PlayerToolsCopyFrame, "UIPanelButtonTemplate")
-PlayerToolsCloseBtn:SetPoint("TOPRIGHT", PlayerToolsLinkBox, "BOTTOMRIGHT", 0, -5)
-PlayerToolsCloseBtn:SetWidth(70)
-PlayerToolsCloseBtn:SetHeight(22)
-PlayerToolsCloseBtn:SetText("CLOSE")
-PlayerToolsCloseBtn:SetScript("OnClick", function() PlayerToolsCopyFrame:Hide() end)
+    PlayerToolsCloseBtn:SetPoint("TOPRIGHT", PlayerToolsLinkBox, "BOTTOMRIGHT", 0, -5)
+    PlayerToolsCloseBtn:SetWidth(70)
+    PlayerToolsCloseBtn:SetHeight(22)
+    PlayerToolsCloseBtn:SetText("CLOSE")
+    PlayerToolsCloseBtn:SetScript("OnClick", function() PlayerToolsCopyFrame:Hide() end)
 
 -- ============================================
 --  Popup display function
