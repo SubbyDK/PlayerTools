@@ -1,7 +1,11 @@
+-- ============================================
+--  Locals
+-- ============================================
+
 local AddonName = "PlayerTools"
 local PlayerTools_LogInTime = GetTime()
 local menuLoaded = false
-local inGame = false
+local waitForRoster
 
 -- ============================================
 --  PlayerTools: Custom UnitPopup menu entries
@@ -24,10 +28,26 @@ UnitPopupButtons["PLAYERTOOLS_LOG"] = {
 
 UnitPopupButtons["PLAYERTOOLS_SEPARATOR"] = {
     text = "|cff606060····································|r",
-    dist = 5,
+    dist = 0,
     disabled = 1,
     notClickable = 1,
 }
+
+
+
+--[[
+local status = true
+if IsInGuild() then
+    local test = GetGuildInfo("player")
+    if (test == nil) then
+        status = false
+    end
+end
+   
+   return status
+--]]
+
+
 
 -- ============================================
 --  Add our entries to the unit popup menus
@@ -38,9 +58,9 @@ local function PlayerTools_AddToMenu(menuKey)
         return
     end
 
-    local _, _, _, _, _, _, canGuildInvite = GuildControlGetRankFlags()
-
     table.insert(UnitPopupMenus[menuKey], "PLAYERTOOLS_SEPARATOR")
+
+    local _, _, _, _, _, _, canGuildInvite = GuildControlGetRankFlags()
 
     if (canGuildInvite) then
         table.insert(UnitPopupMenus[menuKey], "PLAYERTOOLS_INVITE_GUILD")
@@ -63,20 +83,50 @@ end
 -- ============================================
 
 local PlayerTools_EventFrame = CreateFrame("Frame")
-PlayerTools_EventFrame:RegisterEvent("PLAYER_LOGIN")
+PlayerTools_EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+PlayerTools_EventFrame:RegisterEvent("ADDON_LOADED")
 
 PlayerTools_EventFrame:SetScript("OnEvent", function()
-    if (event == "PLAYER_LOGIN") then
-        inGame = true
-        PlayerTools_EventFrame:UnregisterEvent("PLAYER_LOGIN")
+    if (event == "ADDON_LOADED") and (arg1 == AddonName) then
+        -- Maybe something here, now it's ready.
+        PlayerTools_EventFrame:UnregisterEvent("ADDON_LOADED")
+    elseif (event == "PLAYER_ENTERING_WORLD") then
+        if IsInGuild() then
+            GuildRoster();
+            waitForRoster = "YES"
+            PlayerTools_LogInTime = GetTime()
+        else
+            waitForRoster = "NO"
+        end
+        PlayerTools_EventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
     end
 end)
 
+-- ============================================
+--  OnUpdate
+-- ============================================
+
 PlayerTools_EventFrame:SetScript("OnUpdate", function()
-    if ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) and (inGame) then
-        PlayerTools_SetupMenus()
-        menuLoaded = true
-        DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
+
+    -- 
+    if (waitForRoster == "YES") then
+        -- We use GuildControlGetRankFlags() to check that settings is loaded, if they are not, then "Invite to Guild" will not be shown.
+        local guildchat_listen = GuildControlGetRankFlags()
+        if (guildchat_listen) then
+            if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
+                PlayerTools_SetupMenus()
+                menuLoaded = true
+                DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
+                waitForRoster = false
+            end
+        end
+    elseif (waitForRoster == "NO") then
+        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
+            PlayerTools_SetupMenus()
+            menuLoaded = true
+            DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
+            waitForRoster = false
+        end
     end
 end)
 
