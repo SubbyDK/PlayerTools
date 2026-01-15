@@ -63,12 +63,23 @@ local function PlayerTools_SetupMenus()
 end
 
 -- ============================================
+--  Sort the guild by names and then by ranks.
+-- ============================================
+
+local function PlayerTools_GuildSort()
+    SortGuildRoster("name")
+    SortGuildRoster("rank")
+    SortGuildRoster("rank")
+end
+
+-- ============================================
 --  Event handling
 -- ============================================
 
 local PlayerTools_EventFrame = CreateFrame("Frame")
 PlayerTools_EventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 PlayerTools_EventFrame:RegisterEvent("ADDON_LOADED")
+PlayerTools_EventFrame:RegisterEvent("GUILD_ROSTER_UPDATE")
 
 PlayerTools_EventFrame:SetScript("OnEvent", function()
     if (event == "ADDON_LOADED") and (arg1 == AddonName) then
@@ -76,15 +87,30 @@ PlayerTools_EventFrame:SetScript("OnEvent", function()
         PlayerTools_EventFrame:UnregisterEvent("ADDON_LOADED")
     elseif (event == "PLAYER_ENTERING_WORLD") then
         if IsInGuild() then
-            if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) then
-                GuildRoster();
-            end
+            GuildRoster()
             waitForRoster = "YES"
             PlayerTools_LogInTime = GetTime()
         else
             waitForRoster = "NO"
         end
         PlayerTools_EventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    elseif (event == "GUILD_ROSTER_UPDATE") then
+        -- In some cases the addon may take a while (10–60 seconds) to initialize after logging in.
+        -- This happens because PlayerTools must wait for GuildControlGetRankFlags() to return valid guild-permission data before the right-click menu entries can be safely added.
+        -- The delay depends entirely on how quickly the server provides this information, and the timing can vary from login to login.
+        -- There is currently no reliable way to speed this up without risking incorrect or missing menu entries.
+        local guildchat_listen, _, _, _, _, _, canGuildInvite = GuildControlGetRankFlags()
+        if (waitForRoster == "YES") then
+            if (guildchat_listen) then
+                if (canGuildInvite) then
+                    createMenu = true
+                    PlayerTools_EventFrame:UnregisterEvent("GUILD_ROSTER_UPDATE")
+                else
+                    waitForRoster = "NO"
+                    PlayerTools_EventFrame:UnregisterEvent("GUILD_ROSTER_UPDATE")
+                end
+            end
+        end
     end
 end)
 
@@ -93,18 +119,13 @@ end)
 -- ============================================
 
 PlayerTools_EventFrame:SetScript("OnUpdate", function()
-
-    -- 
-    if (waitForRoster == "YES") then
-        -- We use GuildControlGetRankFlags() to check that settings is loaded, if they are not, then "Invite to Guild" will not be shown.
-        local guildchat_listen = GuildControlGetRankFlags()
-        if (guildchat_listen) then
-            if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
-                PlayerTools_SetupMenus()
-                menuLoaded = true
-                DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
-                waitForRoster = false
-            end
+    if (waitForRoster == "YES") and (createMenu) then
+        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
+            PlayerTools_SetupMenus()
+            menuLoaded = true
+            DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
+            waitForRoster = false
+            PlayerTools_GuildSort()
         end
     elseif (waitForRoster == "NO") then
         if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
@@ -112,6 +133,7 @@ PlayerTools_EventFrame:SetScript("OnUpdate", function()
             menuLoaded = true
             DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
             waitForRoster = false
+            PlayerTools_GuildSort()
         end
     end
 end)
@@ -216,6 +238,8 @@ function UnitPopup_OnClick()
     if button == "PLAYERTOOLS_INVITE_GUILD" then
         if GuildInvite then
             GuildInvite(name)
+        elseif GuildInviteByName then
+            GuildInviteByName(name)
         elseif SlashCmdList and SlashCmdList["GUILD_INVITE"] then
             SlashCmdList["GUILD_INVITE"](name)
         end
