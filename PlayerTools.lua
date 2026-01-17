@@ -4,8 +4,9 @@
 
 local AddonName = "PlayerTools"
 local PlayerTools_LogInTime = GetTime()
-local menuLoaded = false
-local waitForRoster
+local PlayerTools_MenuLoaded = false
+local PlayerTools_WaitForRoster
+local PlayerTools_CreateMenu
 
 -- ============================================
 --  PlayerTools: Custom UnitPopup menu entries
@@ -88,10 +89,9 @@ PlayerTools_EventFrame:SetScript("OnEvent", function()
     elseif (event == "PLAYER_ENTERING_WORLD") then
         if IsInGuild() then
             GuildRoster()
-            waitForRoster = "YES"
-            PlayerTools_LogInTime = GetTime()
+            PlayerTools_WaitForRoster = "YES"
         else
-            waitForRoster = "NO"
+            PlayerTools_WaitForRoster = "NO"
         end
         PlayerTools_EventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
     elseif (event == "GUILD_ROSTER_UPDATE") then
@@ -100,13 +100,13 @@ PlayerTools_EventFrame:SetScript("OnEvent", function()
         -- The delay depends entirely on how quickly the server provides this information, and the timing can vary from login to login.
         -- There is currently no reliable way to speed this up without risking incorrect or missing menu entries.
         local guildchat_listen, _, _, _, _, _, canGuildInvite = GuildControlGetRankFlags()
-        if (waitForRoster == "YES") then
+        if (PlayerTools_WaitForRoster == "YES") then
             if (guildchat_listen) then
                 if (canGuildInvite) then
-                    createMenu = true
+                    PlayerTools_CreateMenu = true
                     PlayerTools_EventFrame:UnregisterEvent("GUILD_ROSTER_UPDATE")
                 else
-                    waitForRoster = "NO"
+                    PlayerTools_WaitForRoster = "NO"
                     PlayerTools_EventFrame:UnregisterEvent("GUILD_ROSTER_UPDATE")
                 end
             end
@@ -119,20 +119,20 @@ end)
 -- ============================================
 
 PlayerTools_EventFrame:SetScript("OnUpdate", function()
-    if (waitForRoster == "YES") and (createMenu) then
-        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
+    if (PlayerTools_WaitForRoster == "YES") and (PlayerTools_CreateMenu) then
+        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (PlayerTools_MenuLoaded == false) then
             PlayerTools_SetupMenus()
-            menuLoaded = true
+            PlayerTools_MenuLoaded = true
             DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
-            waitForRoster = false
+            PlayerTools_WaitForRoster = false
             PlayerTools_GuildSort()
         end
-    elseif (waitForRoster == "NO") then
-        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (menuLoaded == false) then
+    elseif (PlayerTools_WaitForRoster == "NO") then
+        if (PlayerTools_LogInTime) and ((PlayerTools_LogInTime + 5) < GetTime()) and (PlayerTools_MenuLoaded == false) then
             PlayerTools_SetupMenus()
-            menuLoaded = true
+            PlayerTools_MenuLoaded = true
             DEFAULT_CHAT_FRAME:AddMessage("|cffFF8000" .. AddonName .. "|r" .. " by " .. "|cFFFFF468" .. "Subby" .. "|r" .. " is loaded.")
-            waitForRoster = false
+            PlayerTools_WaitForRoster = false
             PlayerTools_GuildSort()
         end
     end
