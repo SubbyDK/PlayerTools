@@ -45,7 +45,7 @@ World of Warcraft\Interface\AddOns\
 ## ⚠️ Known Issues
 
 ### Slow loading on login
-In some cases the addon may take a while (10–60 seconds) to initialize after logging in.  
+In some cases the addon may take a while (10–300 seconds) to initialize after logging in.  
 This happens because PlayerTools must wait for `GuildControlGetRankFlags()` to return valid guild‑permission data before the right‑click menu entries can be safely added.  
 The delay depends entirely on how quickly the server provides this information, and the timing can vary from login to login.  
 There is currently no reliable way to speed this up without risking incorrect or missing menu entries.
