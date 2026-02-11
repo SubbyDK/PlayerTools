@@ -55,3 +55,9 @@ There is currently no reliable way to speed this up without risking incorrect or
 ## 👤 Author
 **Subby** _(Requested by Plooga)_  
 PlayerTools is built for the Turtle WoW community with a focus on simplicity, stability, and full Vanilla compatibility.
+
+---
+
+## 📄 License
+
+MIT License — do what you want with it. Credits appreciated but not required.
